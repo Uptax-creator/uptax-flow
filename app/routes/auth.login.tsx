@@ -44,7 +44,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   }
   
   return json(
-    { error: 'Invalid email or password' },
+    { error: 'Invalid email or password' } as const,
     { status: 400 }
   )
 }
@@ -100,9 +100,9 @@ export default function LoginPage() {
             </div>
           </div>
           
-          {actionData?.error && (
+          {(actionData as any)?.error && (
             <div className="text-red-600 text-sm text-center">
-              {actionData.error}
+              {(actionData as any).error}
             </div>
           )}
           
