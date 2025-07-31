@@ -20,7 +20,7 @@
     "preview": "pnpm run build && pnpm run start"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.39",
