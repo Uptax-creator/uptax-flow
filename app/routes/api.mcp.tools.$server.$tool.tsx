@@ -4,35 +4,35 @@ import { createSessionStorage, requireUser } from '~/lib/auth/session'
 // MCP Server configurations (this should match your running servers)
 const MCP_SERVERS = {
   omie: {
-    endpoint: 'http://localhost:3000',
+    endpoint: process.env.MCP_OMIE_ENDPOINT || '',
     name: 'Omie FastMCP'
   },
   nibo: {
-    endpoint: 'http://localhost:3001', 
+    endpoint: process.env.MCP_NIBO_ENDPOINT || '', 
     name: 'Nibo MCP'
   },
   'atlas-task': {
-    endpoint: 'http://localhost:3002',
+    endpoint: process.env.MCP_ATLAS_ENDPOINT || '',
     name: 'Atlas Task System'
   },
   'n8n-mcp': {
-    endpoint: 'http://localhost:5678/api/v1',
+    endpoint: process.env.N8N_API_URL || '',
     name: 'N8N MCP Workflows'
   },
   jira: {
-    endpoint: 'http://localhost:3003',
+    endpoint: process.env.MCP_JIRA_ENDPOINT || '',
     name: 'Jira MCP'
   },
   confluence: {
-    endpoint: 'http://localhost:3004',
+    endpoint: process.env.MCP_CONFLUENCE_ENDPOINT || '',
     name: 'Confluence MCP'
   },
   composio: {
-    endpoint: 'http://localhost:3005',
+    endpoint: process.env.MCP_COMPOSIO_ENDPOINT || '',
     name: 'Composio MCP'
   },
   context7: {
-    endpoint: 'http://localhost:3006',
+    endpoint: process.env.MCP_CONTEXT7_ENDPOINT || '',
     name: 'Context7 MCP'
   }
 } as const
