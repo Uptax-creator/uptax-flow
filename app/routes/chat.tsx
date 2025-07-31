@@ -1,5 +1,5 @@
 import { json, type MetaFunction } from '@remix-run/cloudflare'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from '@remix-run/react'
 
 export const meta: MetaFunction = () => {
@@ -27,9 +27,39 @@ export default function Chat() {
   const [provider, setProvider] = useState<'openrouter' | 'gemini'>('openrouter')
   const [geminiApiKey, setGeminiApiKey] = useState('')
 
+  // Load saved API keys from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedOpenRouter = localStorage.getItem('uptax-openrouter-key')
+      const savedGemini = localStorage.getItem('uptax-gemini-key')
+      const savedProvider = localStorage.getItem('uptax-provider') as 'openrouter' | 'gemini'
+      
+      if (savedOpenRouter && savedOpenRouter !== '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') {
+        setApiKey(savedOpenRouter)
+      }
+      if (savedGemini) {
+        setGeminiApiKey(savedGemini)
+      }
+      if (savedProvider) {
+        setProvider(savedProvider)
+        if (savedProvider === 'gemini') {
+          setSelectedModel('gemini-1.5-pro')
+        }
+      }
+    }
+  }, [])
+
+  // Save API keys to localStorage
+  const saveApiKey = (key: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, value)
+    }
+  }
+
   // Update model when provider changes
   const handleProviderChange = (newProvider: 'openrouter' | 'gemini') => {
     setProvider(newProvider)
+    saveApiKey('uptax-provider', newProvider)
     if (newProvider === 'openrouter') {
       setSelectedModel('anthropic/claude-3.5-sonnet')
     } else {
@@ -215,12 +245,16 @@ export default function Chat() {
                   <input
                     type="password"
                     value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
+                    onChange={(e) => {
+                      setApiKey(e.target.value)
+                      saveApiKey('uptax-openrouter-key', e.target.value)
+                    }}
                     placeholder="sk-or-v1-..."
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   />
                   <div className="text-xs text-gray-500 mt-1">
                     <p>• Obtenha em <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">openrouter.ai/keys</a></p>
+                    <p>• 💾 Salvamento automático ativo</p>
                   </div>
                 </div>
               ) : (
@@ -229,17 +263,43 @@ export default function Chat() {
                     API Key (Gemini)
                   </label>
                   <input
-                    type="password"
+                    type="text"
                     value={geminiApiKey}
-                    onChange={(e) => setGeminiApiKey(e.target.value)}
-                    placeholder="AIza..."
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    onChange={(e) => {
+                      console.log('Gemini API key changed:', e.target.value)
+                      setGeminiApiKey(e.target.value)
+                      saveApiKey('uptax-gemini-key', e.target.value)
+                    }}
+                    placeholder="AIzaSy..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
                   />
                   <div className="text-xs text-gray-500 mt-1">
-                    <p>• Obtenha em <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">makersuite.google.com</a></p>
+                    <p>• Obtenha em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">aistudio.google.com/app/apikey</a></p>
+                    <p>• Formato: AIzaSy... (39 caracteres)</p>
+                    <p>• 💾 Salvamento automático ativo</p>
+                    {geminiApiKey && (
+                      <p className="text-green-600">• ✅ Chave inserida: {geminiApiKey.length} caracteres</p>
+                    )}
                   </div>
                 </div>
               )}
+            </div>
+            
+            {/* Test Button */}
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  const testKey = provider === 'openrouter' ? apiKey : geminiApiKey
+                  if (!testKey) {
+                    alert('Digite sua API key primeiro!')
+                    return
+                  }
+                  alert(`✅ API Key configurada!\nProvider: ${provider}\nModelo: ${selectedModel}\nChave: ${testKey.substring(0, 10)}...`)
+                }}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+              >
+                🧪 Testar Configuração
+              </button>
             </div>
           </div>
         )}
