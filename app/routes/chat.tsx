@@ -78,7 +78,7 @@ export default function Chat() {
     setIsLoading(true)
 
     try {
-      const endpoint = provider === 'openrouter' ? '/api/chat/openrouter' : '/api/chat/gemini'
+      const endpoint = provider === 'openrouter' ? '/api/chat/openrouter' : '/api/chat/gemini/rest'
       
       // API call - server handles credentials securely
       const response = await fetch(endpoint, {

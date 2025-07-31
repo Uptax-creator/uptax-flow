@@ -17,6 +17,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
       return json({ error: 'Model and messages are required' }, { status: 400 })
     }
     
+    // Log API key info (safely)
+    console.log('Gemini API - Using key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NO KEY')
+    console.log('Gemini API - Model:', model)
+    
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey)
     const geminiModel = genAI.getGenerativeModel({ 
