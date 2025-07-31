@@ -21,6 +21,8 @@ export default function Chat() {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [apiKey, setApiKey] = useState('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')
+  const [showConfig, setShowConfig] = useState(false)
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,14 +53,15 @@ export default function Chat() {
             ...messages.filter(m => m.role !== 'system'),
             { role: 'user', content: currentInput }
           ],
-          apiKey: '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',
+          apiKey: apiKey,
           temperature: 0.7,
           maxTokens: 1000
         })
       })
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
         const assistantMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant' as const,
@@ -66,14 +69,18 @@ export default function Chat() {
         }
         setMessages(prev => [...prev, assistantMessage])
       } else {
-        throw new Error('API call failed')
+        // Show specific error
+        const errorMsg = data.error || 'API call failed'
+        const details = data.details ? `\nDetalhes: ${typeof data.details === 'string' ? data.details : JSON.stringify(data.details)}` : ''
+        throw new Error(`${errorMsg}${details}`)
       }
     } catch (error) {
-      // Fallback to demo response
+      // Show error details
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
-        content: `Recebi sua mensagem: "${currentInput}". Estou com problemas de conectividade com o OpenRouter no momento. Esta é uma resposta demo enquanto trabalho na correção.`
+        content: `❌ Erro ao conectar com OpenRouter:\n${errorMessage}\n\n💡 Dicas:\n1. Verifique sua API key no botão ⚙️ Config\n2. Certifique-se que a chave começa com "sk-or-v1-"\n3. Verifique se tem créditos em openrouter.ai`
       }
       setMessages(prev => [...prev, assistantMessage])
     }
@@ -88,6 +95,13 @@ export default function Chat() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">UpTax Flow Chat</h1>
           <div className="flex space-x-4">
+            <button
+              onClick={() => setShowConfig(!showConfig)}
+              className="text-indigo-600 hover:text-indigo-700 flex items-center space-x-1"
+            >
+              <span>⚙️</span>
+              <span>Config</span>
+            </button>
             <Link to="/" className="text-indigo-600 hover:text-indigo-700">Home</Link>
             <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-700">Dashboard</Link>
             <Link to="/integrations" className="text-indigo-600 hover:text-indigo-700">Integrations</Link>
@@ -97,6 +111,31 @@ export default function Chat() {
 
       {/* Chat Container */}
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Config Panel */}
+        {showConfig && (
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h3 className="font-semibold mb-2">🔧 Configuração OpenRouter</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  API Key (OpenRouter)
+                </label>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="sk-or-v1-..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="text-xs text-gray-500">
+                <p>• Obtenha sua chave em <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">openrouter.ai/keys</a></p>
+                <p>• A chave atual é a mesma do seu LLM Suite</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="bg-white rounded-lg shadow-sm h-[600px] flex flex-col">
           
           {/* Messages Area */}

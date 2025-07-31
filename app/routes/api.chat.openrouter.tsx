@@ -19,7 +19,7 @@ export async function action({ request }: ActionFunctionArgs) {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://uptax.net',
+        'HTTP-Referer': 'https://uptax-flow.pages.dev',
         'X-Title': 'UpTax Flow Chat'
       },
       body: JSON.stringify({
