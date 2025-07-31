@@ -1,0 +1,190 @@
+{
+  "name": "UpTax Business AI Chat",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "business-chat",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Business Question Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "webhook-node"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ai_role",
+              "value": "Você é um consultor especialista em planos de negócios para empresas brasileiras. Foque em análise de mercado, projeções financeiras realistas, estratégias de crescimento, compliance fiscal brasileiro, e oportunidades específicas do mercado nacional. Sempre forneça respostas práticas com números específicos, cronogramas e ações concretas."
+            },
+            {
+              "name": "user_question", 
+              "value": "={{$json.body.question}}"
+            },
+            {
+              "name": "context",
+              "value": "={{$json.body.context || 'Nova conversa sobre plano de negócios'}}"
+            }
+          ]
+        }
+      },
+      "name": "Prepare AI Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [440, 300],
+      "id": "set-context"
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "none",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "HTTP-Referer", 
+              "value": "https://uptax.ai"
+            },
+            {
+              "name": "X-Title",
+              "value": "UpTax Business Advisor"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"anthropic/claude-3.5-sonnet\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"{{$json.ai_role}}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$json.user_question}}\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000\n}"
+      },
+      "name": "OpenRouter AI Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [640, 300],
+      "id": "openrouter-call"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ai_response",
+              "value": "={{$json.choices[0].message.content}}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{new Date().toISOString()}}"
+            },
+            {
+              "name": "tokens_used",
+              "value": "={{$json.usage.total_tokens}}"
+            },
+            {
+              "name": "model_used",
+              "value": "anthropic/claude-3.5-sonnet"
+            }
+          ]
+        }
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set", 
+      "typeVersion": 1,
+      "position": [840, 300],
+      "id": "format-response"
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondBody": "={\n  \"success\": true,\n  \"response\": \"{{$json.ai_response}}\",\n  \"timestamp\": \"{{$json.timestamp}}\",\n  \"tokens_used\": {{$json.tokens_used}},\n  \"model\": \"{{$json.model_used}}\"\n}",
+        "responseHeaders": {
+          "entries": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Respond to Chat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1040, 300],
+      "id": "respond-webhook"
+    }
+  ],
+  "connections": {
+    "Business Question Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare AI Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Context": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter AI Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter AI Call": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-07-31T17:00:00.000Z",
+      "updatedAt": "2025-07-31T17:00:00.000Z",
+      "id": "uptax-ai",
+      "name": "UpTax AI"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-07-31T17:00:00.000Z",
+  "versionId": "1"
+}

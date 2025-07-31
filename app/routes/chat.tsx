@@ -21,32 +21,53 @@ export default function Chat() {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [apiKey, setApiKey] = useState('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')
+  const [apiKey, setApiKey] = useState('')
   const [showConfig, setShowConfig] = useState(false)
   const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet')
   const [provider, setProvider] = useState<'openrouter' | 'gemini'>('openrouter')
   const [geminiApiKey, setGeminiApiKey] = useState('')
 
-  // Load saved API keys from localStorage
+  // Load API keys from server credentials and localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedOpenRouter = localStorage.getItem('uptax-openrouter-key')
-      const savedGemini = localStorage.getItem('uptax-gemini-key')
-      const savedProvider = localStorage.getItem('uptax-provider') as 'openrouter' | 'gemini'
+    const loadCredentials = async () => {
+      try {
+        // First, try to load from server
+        const response = await fetch('/api/credentials')
+        if (response.ok) {
+          const creds = await response.json()
+          if (creds.openrouter) {
+            setApiKey(creds.openrouter)
+          }
+          if (creds.gemini) {
+            setGeminiApiKey(creds.gemini)
+          }
+        }
+      } catch (error) {
+        console.log('Failed to load server credentials, using localStorage:', error)
+      }
       
-      if (savedOpenRouter && savedOpenRouter !== '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') {
-        setApiKey(savedOpenRouter)
-      }
-      if (savedGemini) {
-        setGeminiApiKey(savedGemini)
-      }
-      if (savedProvider) {
-        setProvider(savedProvider)
-        if (savedProvider === 'gemini') {
-          setSelectedModel('gemini-1.5-pro')
+      // Then, load any overrides from localStorage
+      if (typeof window !== 'undefined') {
+        const savedOpenRouter = localStorage.getItem('uptax-openrouter-key')
+        const savedGemini = localStorage.getItem('uptax-gemini-key')
+        const savedProvider = localStorage.getItem('uptax-provider') as 'openrouter' | 'gemini'
+        
+        if (savedOpenRouter) {
+          setApiKey(savedOpenRouter)
+        }
+        if (savedGemini) {
+          setGeminiApiKey(savedGemini)
+        }
+        if (savedProvider) {
+          setProvider(savedProvider)
+          if (savedProvider === 'gemini') {
+            setSelectedModel('gemini-1.5-pro')
+          }
         }
       }
     }
+    
+    loadCredentials()
   }, [])
 
   // Save API keys to localStorage
