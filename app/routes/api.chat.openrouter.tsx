@@ -1,12 +1,15 @@
 import { json, type ActionFunctionArgs } from '@remix-run/cloudflare'
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   try {
     const body = await request.json()
-    const { model, messages, apiKey, temperature = 0.7, maxTokens = 1000 } = body
+    const { model, messages, temperature = 0.7, maxTokens = 1000 } = body
+    
+    // Use server-side API key from environment
+    const apiKey = context.cloudflare.env.OPENROUTER_API_KEY
     
     if (!apiKey) {
-      return json({ error: 'OpenRouter API key is required' }, { status: 400 })
+      return json({ error: 'OpenRouter API key not configured on server' }, { status: 500 })
     }
     
     if (!model || !messages) {

@@ -27,47 +27,21 @@ export default function Chat() {
   const [provider, setProvider] = useState<'openrouter' | 'gemini'>('openrouter')
   const [geminiApiKey, setGeminiApiKey] = useState('')
 
-  // Load API keys from server credentials and localStorage
+  // Load saved preferences from localStorage only
   useEffect(() => {
-    const loadCredentials = async () => {
-      try {
-        // First, try to load from server
-        const response = await fetch('/api/credentials')
-        if (response.ok) {
-          const creds = await response.json()
-          if (creds.openrouter) {
-            setApiKey(creds.openrouter)
-          }
-          if (creds.gemini) {
-            setGeminiApiKey(creds.gemini)
-          }
-        }
-      } catch (error) {
-        console.log('Failed to load server credentials, using localStorage:', error)
-      }
+    if (typeof window !== 'undefined') {
+      const savedProvider = localStorage.getItem('uptax-provider') as 'openrouter' | 'gemini'
+      const savedModel = localStorage.getItem('uptax-model')
       
-      // Then, load any overrides from localStorage
-      if (typeof window !== 'undefined') {
-        const savedOpenRouter = localStorage.getItem('uptax-openrouter-key')
-        const savedGemini = localStorage.getItem('uptax-gemini-key')
-        const savedProvider = localStorage.getItem('uptax-provider') as 'openrouter' | 'gemini'
-        
-        if (savedOpenRouter) {
-          setApiKey(savedOpenRouter)
-        }
-        if (savedGemini) {
-          setGeminiApiKey(savedGemini)
-        }
-        if (savedProvider) {
-          setProvider(savedProvider)
-          if (savedProvider === 'gemini') {
-            setSelectedModel('gemini-1.5-pro')
-          }
-        }
+      if (savedProvider) {
+        setProvider(savedProvider)
+      }
+      if (savedModel) {
+        setSelectedModel(savedModel)
+      } else if (savedProvider === 'gemini') {
+        setSelectedModel('gemini-1.5-pro')
       }
     }
-    
-    loadCredentials()
   }, [])
 
   // Save API keys to localStorage
@@ -105,9 +79,8 @@ export default function Chat() {
 
     try {
       const endpoint = provider === 'openrouter' ? '/api/chat/openrouter' : '/api/chat/gemini'
-      const apiKeyToUse = provider === 'openrouter' ? apiKey : geminiApiKey
       
-      // API call based on provider
+      // API call - server handles credentials securely
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -120,7 +93,6 @@ export default function Chat() {
             ...messages.filter(m => m.role !== 'system'),
             { role: 'user', content: currentInput }
           ],
-          apiKey: apiKeyToUse,
           temperature: 0.7,
           maxTokens: 1000
         })
@@ -256,71 +228,16 @@ export default function Chat() {
               </select>
             </div>
             
-            {/* API Key Input */}
+            {/* Server Status */}
             <div className="space-y-2">
-              {provider === 'openrouter' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    API Key (OpenRouter)
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => {
-                      setApiKey(e.target.value)
-                      saveApiKey('uptax-openrouter-key', e.target.value)
-                    }}
-                    placeholder="sk-or-v1-..."
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                  />
-                  <div className="text-xs text-gray-500 mt-1">
-                    <p>• Obtenha em <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">openrouter.ai/keys</a></p>
-                    <p>• 💾 Salvamento automático ativo</p>
-                  </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <h4 className="text-green-800 font-medium text-sm mb-2">🔒 Configuração Segura</h4>
+                <div className="text-xs text-green-700 space-y-1">
+                  <p>• API keys gerenciadas pelo servidor</p>
+                  <p>• Credenciais protegidas no ambiente de produção</p>
+                  <p>• {provider === 'openrouter' ? 'OpenRouter' : 'Google Gemini'} configurado</p>
                 </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    API Key (Gemini)
-                  </label>
-                  <input
-                    type="text"
-                    value={geminiApiKey}
-                    onChange={(e) => {
-                      console.log('Gemini API key changed:', e.target.value)
-                      setGeminiApiKey(e.target.value)
-                      saveApiKey('uptax-gemini-key', e.target.value)
-                    }}
-                    placeholder="AIzaSy..."
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
-                  />
-                  <div className="text-xs text-gray-500 mt-1">
-                    <p>• Obtenha em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">aistudio.google.com/app/apikey</a></p>
-                    <p>• Formato: AIzaSy... (39 caracteres)</p>
-                    <p>• 💾 Salvamento automático ativo</p>
-                    {geminiApiKey && (
-                      <p className="text-green-600">• ✅ Chave inserida: {geminiApiKey.length} caracteres</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Test Button */}
-            <div className="mt-4 pt-3 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  const testKey = provider === 'openrouter' ? apiKey : geminiApiKey
-                  if (!testKey) {
-                    alert('Digite sua API key primeiro!')
-                    return
-                  }
-                  alert(`✅ API Key configurada!\nProvider: ${provider}\nModelo: ${selectedModel}\nChave: ${testKey.substring(0, 10)}...`)
-                }}
-                className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
-              >
-                🧪 Testar Configuração
-              </button>
+              </div>
             </div>
           </div>
         )}
