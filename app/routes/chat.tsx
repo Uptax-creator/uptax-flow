@@ -39,7 +39,7 @@ export default function Chat() {
       if (savedModel) {
         setSelectedModel(savedModel)
       } else if (savedProvider === 'gemini') {
-        setSelectedModel('gemini-1.5-pro')
+        setSelectedModel('gemini-1.5-flash')
       }
     }
   }, [])
@@ -58,7 +58,7 @@ export default function Chat() {
     if (newProvider === 'openrouter') {
       setSelectedModel('anthropic/claude-3.5-sonnet')
     } else {
-      setSelectedModel('gemini-1.5-pro')
+      setSelectedModel('gemini-1.5-flash')
     }
   }
 
