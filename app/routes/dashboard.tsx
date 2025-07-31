@@ -1,16 +1,21 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/cloudflare'
 import { useLoaderData, Link, Form } from '@remix-run/react'
 import { createSessionStorage, requireUser } from '~/lib/auth/session'
+import { DEFAULT_MCP_SERVERS } from '~/lib/integrations/mcp-config'
+import MCPStatusPanel from '~/components/dashboard/MCPStatusPanel'
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionStorage = createSessionStorage(context.cloudflare.env.AUTH_SECRET)
   const user = await requireUser(sessionStorage, request)
   
-  return json({ user })
+  return json({ 
+    user,
+    mcpServers: DEFAULT_MCP_SERVERS
+  })
 }
 
 export default function Dashboard() {
-  const { user } = useLoaderData<typeof loader>()
+  const { user, mcpServers } = useLoaderData<typeof loader>()
   
   return (
     <div className="min-h-screen bg-gray-100">
@@ -40,51 +45,58 @@ export default function Dashboard() {
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
-            <h2 className="text-2xl font-bold mb-4">Welcome to UpTax Flow</h2>
-            <p className="text-gray-600 mb-6">
-              Start building your AI-powered workflows here.
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to UpTax Flow</h2>
+            <p className="text-gray-600">
+              AI-powered workflow automation platform with real-time MCP integrations
             </p>
+          </div>
+
+          {/* MCP Status Panel */}
+          <div className="mb-8">
+            <MCPStatusPanel servers={mcpServers} />
+          </div>
+          
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-2">🚀 Create Workflow</h3>
+              <p className="text-gray-600 mb-4">
+                Build new automation workflows with AI assistance
+              </p>
+              <Link
+                to="/workflows/new"
+                className="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Get Started →
+              </Link>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Create Workflow</h3>
-                <p className="text-gray-600 mb-4">
-                  Build new automation workflows with AI assistance
-                </p>
-                <Link
-                  to="/workflows/new"
-                  className="text-indigo-600 hover:text-indigo-700"
-                >
-                  Get Started →
-                </Link>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">MCP Integrations</h3>
-                <p className="text-gray-600 mb-4">
-                  Connect to Omie, Nibo, and other business systems
-                </p>
-                <Link
-                  to="/integrations"
-                  className="text-indigo-600 hover:text-indigo-700"
-                >
-                  Configure →
-                </Link>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Analytics</h3>
-                <p className="text-gray-600 mb-4">
-                  Monitor workflow performance and metrics
-                </p>
-                <Link
-                  to="/analytics"
-                  className="text-indigo-600 hover:text-indigo-700"
-                >
-                  View Reports →
-                </Link>
-              </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-2">🔗 MCP Integrations</h3>
+              <p className="text-gray-600 mb-4">
+                Connect to Omie, Nibo, and test business system tools
+              </p>
+              <Link
+                to="/integrations"
+                className="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Configure & Test →
+              </Link>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-2">📊 Analytics</h3>
+              <p className="text-gray-600 mb-4">
+                Monitor workflow performance and system metrics
+              </p>
+              <Link
+                to="/analytics"
+                className="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                View Reports →
+              </Link>
             </div>
           </div>
         </div>

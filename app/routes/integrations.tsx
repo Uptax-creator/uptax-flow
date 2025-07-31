@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { createSessionStorage, requireUser } from '~/lib/auth/session'
 import { LLM_PROVIDERS, DEFAULT_LLM_CONFIG, type LLMConfigForm } from '~/lib/integrations/llm-config'
 import { DEFAULT_MCP_SERVERS, mcpManager, type MCPServer } from '~/lib/integrations/mcp-config'
+import MCPToolTester from '~/components/mcp/MCPToolTester'
+import MCPContextTester from '~/components/mcp/MCPContextTester'
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionStorage = createSessionStorage(context.cloudflare.env.AUTH_SECRET)
@@ -267,6 +269,12 @@ export default function Integrations() {
                   </button>
                 </div>
               </div>
+              
+              {/* MCP Context Tester */}
+              <MCPContextTester openRouterApiKey={llmConfig.provider === 'openrouter' ? llmConfig.apiKey : undefined} />
+              
+              {/* MCP Tool Tester */}
+              <MCPToolTester servers={mcpServers2} />
             </div>
           )}
         </div>
