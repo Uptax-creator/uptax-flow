@@ -116,10 +116,19 @@ export default function Chat() {
     } catch (error) {
       // Show error details
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+      const isQuotaError = errorMessage.includes('429 Too Many Requests') || errorMessage.includes('quota')
+      
+      let helpMessage = ''
+      if (provider === 'gemini' && isQuotaError) {
+        helpMessage = `❌ Limite do Gemini excedido:\n${errorMessage}\n\n💡 Soluções:\n1. Mude para OpenRouter no ⚙️ Config\n2. Aguarde reset da quota (veja retryDelay)\n3. Considere upgrade para plano pago`
+      } else {
+        helpMessage = `❌ Erro ao conectar com ${provider === 'openrouter' ? 'OpenRouter' : 'Gemini'}:\n${errorMessage}\n\n💡 Verifique:\n1. Configuração no servidor Cloudflare\n2. Status da API do provider\n3. Logs do console para detalhes`
+      }
+      
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
-        content: `❌ Erro ao conectar com OpenRouter:\n${errorMessage}\n\n💡 Dicas:\n1. Verifique sua API key no botão ⚙️ Config\n2. Certifique-se que a chave começa com "sk-or-v1-"\n3. Verifique se tem créditos em openrouter.ai`
+        content: helpMessage
       }
       setMessages(prev => [...prev, assistantMessage])
     }
