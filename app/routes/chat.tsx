@@ -23,6 +23,19 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false)
   const [apiKey, setApiKey] = useState('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')
   const [showConfig, setShowConfig] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet')
+  const [provider, setProvider] = useState<'openrouter' | 'gemini'>('openrouter')
+  const [geminiApiKey, setGeminiApiKey] = useState('')
+
+  // Update model when provider changes
+  const handleProviderChange = (newProvider: 'openrouter' | 'gemini') => {
+    setProvider(newProvider)
+    if (newProvider === 'openrouter') {
+      setSelectedModel('anthropic/claude-3.5-sonnet')
+    } else {
+      setSelectedModel('gemini-1.5-pro')
+    }
+  }
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,20 +53,23 @@ export default function Chat() {
     setIsLoading(true)
 
     try {
-      // Real OpenRouter API call
-      const response = await fetch('/api/chat/openrouter', {
+      const endpoint = provider === 'openrouter' ? '/api/chat/openrouter' : '/api/chat/gemini'
+      const apiKeyToUse = provider === 'openrouter' ? apiKey : geminiApiKey
+      
+      // API call based on provider
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3.5-sonnet',
+          model: selectedModel,
           messages: [
             { role: 'system', content: 'Você é o assistente UpTax Flow, especializado em automação de workflows de negócios e integração com sistemas MCP (Omie, Nibo, etc.). Seja útil e direto.' },
             ...messages.filter(m => m.role !== 'system'),
             { role: 'user', content: currentInput }
           ],
-          apiKey: apiKey,
+          apiKey: apiKeyToUse,
           temperature: 0.7,
           maxTokens: 1000
         })
@@ -114,24 +130,116 @@ export default function Chat() {
         {/* Config Panel */}
         {showConfig && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-            <h3 className="font-semibold mb-2">🔧 Configuração OpenRouter</h3>
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  API Key (OpenRouter)
+            <h3 className="font-semibold mb-4">🔧 Configuração do Chat</h3>
+            
+            {/* Provider Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Provider
+              </label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="openrouter"
+                    checked={provider === 'openrouter'}
+                    onChange={(e) => handleProviderChange(e.target.value as 'openrouter')}
+                    className="mr-2"
+                  />
+                  <span>OpenRouter</span>
                 </label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-or-v1-..."
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                />
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="gemini"
+                    checked={provider === 'gemini'}
+                    onChange={(e) => handleProviderChange(e.target.value as 'gemini')}
+                    className="mr-2"
+                  />
+                  <span>Google Gemini</span>
+                </label>
               </div>
-              <div className="text-xs text-gray-500">
-                <p>• Obtenha sua chave em <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">openrouter.ai/keys</a></p>
-                <p>• A chave atual é a mesma do seu LLM Suite</p>
-              </div>
+            </div>
+            
+            {/* Model Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Modelo
+              </label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              >
+                {provider === 'openrouter' ? (
+                  <>
+                    <optgroup label="Anthropic">
+                      <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                      <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+                      <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                    </optgroup>
+                    <optgroup label="OpenAI">
+                      <option value="openai/gpt-4o">GPT-4o</option>
+                      <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                      <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </optgroup>
+                    <optgroup label="Google">
+                      <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+                      <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+                    </optgroup>
+                    <optgroup label="Meta">
+                      <option value="meta-llama/llama-3.2-90b-vision-instruct">Llama 3.2 90B</option>
+                      <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                    </optgroup>
+                    <optgroup label="Mistral">
+                      <option value="mistralai/mistral-large">Mistral Large</option>
+                      <option value="mistralai/mixtral-8x7b">Mixtral 8x7B</option>
+                    </optgroup>
+                  </>
+                ) : (
+                  <>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  </>
+                )}
+              </select>
+            </div>
+            
+            {/* API Key Input */}
+            <div className="space-y-2">
+              {provider === 'openrouter' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API Key (OpenRouter)
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-or-v1-..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    <p>• Obtenha em <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">openrouter.ai/keys</a></p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API Key (Gemini)
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="AIza..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    <p>• Obtenha em <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">makersuite.google.com</a></p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -198,8 +306,9 @@ export default function Chat() {
           <ul className="text-blue-700 text-sm space-y-1">
             <li>✅ Interface de chat funcionando</li>
             <li>⏳ Integração MCP em desenvolvimento</li>
-            <li>✅ Conexão com OpenRouter/Claude 3.5 Sonnet ativa</li>
-            <li>💡 Esta é uma versão de demonstração</li>
+            <li>✅ Provider: {provider === 'openrouter' ? 'OpenRouter' : 'Google Gemini'}</li>
+            <li>🤖 Modelo: {selectedModel}</li>
+            <li>💡 Configure suas chaves API no botão ⚙️ Config</li>
           </ul>
         </div>
       </div>
