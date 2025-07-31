@@ -9,6 +9,7 @@
   "scripts": {
     "deploy": "npm run build && wrangler pages deploy",
     "build": "remix vite:build",
+    "build:cloudflare": "npm install -g pnpm@9.4.0 && pnpm install --frozen-lockfile && pnpm run build",
     "dev": "remix vite:dev",
     "test": "vitest --run",
     "test:watch": "vitest",
