@@ -33,19 +33,52 @@ export default function Chat() {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentInput = input
     setInput('')
     setIsLoading(true)
 
-    // Simulate API call (replace with real API later)
-    setTimeout(() => {
+    try {
+      // Real OpenRouter API call
+      const response = await fetch('/api/chat/openrouter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3.5-sonnet',
+          messages: [
+            { role: 'system', content: 'Você é o assistente UpTax Flow, especializado em automação de workflows de negócios e integração com sistemas MCP (Omie, Nibo, etc.). Seja útil e direto.' },
+            ...messages.filter(m => m.role !== 'system'),
+            { role: 'user', content: currentInput }
+          ],
+          apiKey: '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',
+          temperature: 0.7,
+          maxTokens: 1000
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant' as const,
+          content: data.response || 'Desculpe, não consegui processar sua mensagem.'
+        }
+        setMessages(prev => [...prev, assistantMessage])
+      } else {
+        throw new Error('API call failed')
+      }
+    } catch (error) {
+      // Fallback to demo response
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
-        content: `Recebi sua mensagem: "${input}". Esta é uma resposta demo. Em breve estarei conectado aos sistemas MCP (Omie, Nibo, etc.) para fornecer respostas mais úteis!`
+        content: `Recebi sua mensagem: "${currentInput}". Estou com problemas de conectividade com o OpenRouter no momento. Esta é uma resposta demo enquanto trabalho na correção.`
       }
       setMessages(prev => [...prev, assistantMessage])
-      setIsLoading(false)
-    }, 1000)
+    }
+
+    setIsLoading(false)
   }
 
   return (
@@ -126,7 +159,7 @@ export default function Chat() {
           <ul className="text-blue-700 text-sm space-y-1">
             <li>✅ Interface de chat funcionando</li>
             <li>⏳ Integração MCP em desenvolvimento</li>
-            <li>⏳ Conexão com OpenRouter/LLM pendente</li>
+            <li>✅ Conexão com OpenRouter/Claude 3.5 Sonnet ativa</li>
             <li>💡 Esta é uma versão de demonstração</li>
           </ul>
         </div>
