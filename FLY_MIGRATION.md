@@ -53,7 +53,7 @@ COPY . .
 RUN pnpm run build
 
 # Expose port
-EXPOSE 8080
+EXPOSE 3000
 
 # Start
 CMD ["pnpm", "start"]
@@ -67,7 +67,7 @@ primary_region = "gru"
 [build]
 
 [http_service]
-  internal_port = 8080
+  internal_port = 3000
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true

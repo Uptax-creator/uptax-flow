@@ -6,6 +6,9 @@ import { LLM_PROVIDERS, DEFAULT_LLM_CONFIG, type LLMConfigForm } from '~/lib/int
 import { DEFAULT_MCP_SERVERS, mcpManager, type MCPServer } from '~/lib/integrations/mcp-config'
 import MCPToolTester from '~/components/mcp/MCPToolTester'
 import MCPContextTester from '~/components/mcp/MCPContextTester'
+import N8NWorkflowTester from '~/components/mcp/N8NWorkflowTester'
+import MCPOrchestratorTester from '~/components/orchestrator/MCPOrchestratorTester'
+import AutoConfigLoader from '~/components/integrations/AutoConfigLoader'
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const sessionStorage = createSessionStorage(context.cloudflare.env.AUTH_SECRET)
@@ -101,6 +104,12 @@ export default function Integrations() {
           {/* LLM Configuration Tab */}
           {activeTab === 'llm' && (
             <div className="space-y-6">
+              {/* Auto Configuration Loader */}
+              <AutoConfigLoader 
+                onConfigLoaded={(config) => setLlmConfig(config)}
+                onError={(error) => console.error('Auto-config error:', error)}
+              />
+              
               <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">AI Provider Configuration</h2>
                 <p className="text-gray-600 mb-6">
@@ -270,8 +279,14 @@ export default function Integrations() {
                 </div>
               </div>
               
+              {/* MCP Agent Orchestrator */}
+              <MCPOrchestratorTester openRouterApiKey={llmConfig.provider === 'openrouter' ? llmConfig.apiKey : undefined} />
+              
               {/* MCP Context Tester */}
               <MCPContextTester openRouterApiKey={llmConfig.provider === 'openrouter' ? llmConfig.apiKey : undefined} />
+              
+              {/* N8N Workflow Tester */}
+              <N8NWorkflowTester />
               
               {/* MCP Tool Tester */}
               <MCPToolTester servers={mcpServers2} />
