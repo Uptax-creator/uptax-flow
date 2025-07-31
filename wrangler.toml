@@ -1,8 +1,11 @@
-#:schema node_modules/wrangler/config-schema.json
-name = "flow"
+name = "uptax-flow"
+compatibility_date = "2024-09-23" 
 compatibility_flags = ["nodejs_compat"]
-compatibility_date = "2024-07-01"
-pages_build_output_dir = "./build/client"
 
-[vars]
-NODE_VERSION = "20.15.1"
+[build]
+command = "pnpm run build"
+cwd = ""
+
+[env.production]
+compatibility_flags = ["nodejs_compat"]
+EOF < /dev/null
