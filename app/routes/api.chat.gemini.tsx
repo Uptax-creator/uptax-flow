@@ -24,26 +24,45 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     })
     
-    // Convert messages to Gemini format
-    const history = messages
-      .filter((m: any) => m.role !== 'system')
-      .map((m: any) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }))
+    // Debug logging
+    console.log('Gemini API - Input messages:', JSON.stringify(messages, null, 2))
     
     // Get system message if exists
     const systemMessage = messages.find((m: any) => m.role === 'system')
     const lastUserMessage = messages[messages.length - 1].content
     
-    // Prepend system message to the last user message
+    // Filter out system messages and convert to Gemini format
+    const chatMessages = messages.filter((m: any) => m.role !== 'system')
+    
+    console.log('Gemini API - Chat messages:', JSON.stringify(chatMessages, null, 2))
+    
+    // Build history properly - must start with user message
+    const history = []
+    for (let i = 0; i < chatMessages.length - 1; i++) {
+      const msg = chatMessages[i]
+      history.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      })
+    }
+    
+    // Ensure history starts with user message
+    if (history.length > 0 && history[0].role === 'model') {
+      // Remove the first model message if it exists
+      history.shift()
+    }
+    
+    // Prepare final prompt with system message
     const finalPrompt = systemMessage 
-      ? `${systemMessage.content}\n\nUser: ${lastUserMessage}`
+      ? `${systemMessage.content}\n\n${lastUserMessage}`
       : lastUserMessage
+    
+    console.log('Gemini API - Final history:', JSON.stringify(history, null, 2))
+    console.log('Gemini API - Final prompt:', finalPrompt)
     
     // Create chat and send message
     const chat = geminiModel.startChat({
-      history: history.slice(0, -1), // All except last message
+      history: history
     })
     
     const result = await chat.sendMessage(finalPrompt)
