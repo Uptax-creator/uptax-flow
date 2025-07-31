@@ -28,16 +28,22 @@ export default function Index() {
           
           <div className="flex justify-center space-x-4 mb-16">
             <Link
-              to="/auth/login"
+              to="/chat"
               className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
             >
-              Get Started
+              🤖 Try Chat
             </Link>
             <Link
               to="/dashboard"
               className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold border border-indigo-600 hover:bg-indigo-50 transition-colors"
             >
               Dashboard
+            </Link>
+            <Link
+              to="/integrations"
+              className="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+            >
+              Integrations
             </Link>
           </div>
           

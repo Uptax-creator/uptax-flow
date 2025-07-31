@@ -11,8 +11,8 @@ import MCPOrchestratorTester from '~/components/orchestrator/MCPOrchestratorTest
 import AutoConfigLoader from '~/components/integrations/AutoConfigLoader'
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const sessionStorage = createSessionStorage(context.cloudflare.env.AUTH_SECRET)
-  const user = await requireUser(sessionStorage, request)
+  // Temporary bypass auth for testing
+  const user = { id: 'demo', email: 'demo@uptax.com.br', name: 'Demo User' }
   
   return json({ 
     user,
